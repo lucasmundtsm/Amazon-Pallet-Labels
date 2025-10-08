@@ -20,9 +20,12 @@
     .header {
       background: linear-gradient(135deg, #1a252f 0%, #2c3e50 100%);
       color: white;
-      padding: 20px 0;
+      padding: 30px 0;
       box-shadow: 0 4px 20px rgba(0,0,0,0.3);
       border-bottom: 4px solid #f39c12;
+      max-width: 1200px;
+      margin: 0 auto;
+      border-radius: 0;
     }
     
     .header-content {
@@ -31,18 +34,19 @@
       padding: 0 20px;
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 15px;
     }
     
     .header h1 {
       margin: 0;
-      font-size: 28px;
+      font-size: 36px;
       font-weight: 600;
       letter-spacing: -0.5px;
     }
     
     .header-icon {
-      font-size: 32px;
+      font-size: 42px;
       color: #f39c12;
     }
     
@@ -60,7 +64,7 @@
       color: white;
       border: none;
       border-radius: 12px;
-      padding: 20px;
+      padding: 15px;
       margin-bottom: 20px;
       text-align: center;
       box-shadow: 0 6px 20px rgba(46, 204, 113, 0.3);
@@ -68,19 +72,19 @@
     
     .upload-section h4 {
       margin-top: 0;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 600;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
     
     .upload-section p {
       opacity: 0.9;
-      margin-bottom: 15px;
-      font-size: 14px;
+      margin-bottom: 12px;
+      font-size: 13px;
     }
     
     .manual-section {
@@ -231,31 +235,47 @@
     }
     
     .logo-section {
-      background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
       color: white;
       border: none;
       border-radius: 12px;
-      padding: 20px;
+      padding: 15px;
       margin-bottom: 20px;
       text-align: center;
-      box-shadow: 0 6px 20px rgba(155, 89, 182, 0.3);
+      box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
     }
     
     .logo-section h4 {
       margin-top: 0;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 600;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
     
-    .logo-section p {
+    .filter-btn {
+      padding: 14px 40px;
+      background: white;
+      color: #2980b9;
+      border: 2px solid white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    
+    .filter-btn:hover {
       opacity: 0.9;
-      margin-bottom: 15px;
-      font-size: 14px;
+    }
+    
+    .filter-btn.active {
+      background: #FF9900;
+      color: white;
+      border-color: #FF9900;
     }
     
     .page {
@@ -421,18 +441,31 @@
   </div>
   
   <div class="controls">
+    <div style="background: #fff8e1; padding: 15px 15px 15px 20px; border-radius: 8px; border-left: 4px solid #f39c12; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+      <span style="font-size: 20px;">📋</span>
+      <p style="margin: 0; font-size: 14px; color: #2c3e50; font-weight: 600;"><strong>Directions:</strong> Upload your Amazon shipment download file, select warehouse locations, then click "Generate Labels" to create printable pallet labels</p>
+    </div>
     <div class="upload-section">
-      <h4>📊 Batch Processing</h4>
-      <p>Upload Excel file with shipment data - labels will generate automatically</p>
+      <h4>📊 Upload: Amazon shipment download file</h4>
       <input type="file" id="excelFile" accept=".xlsx,.xls" class="file-input" onchange="processExcelFile()" />
       <div id="processingStatus" class="processing-status"></div>
     </div>
     
     <div class="logo-section">
-      <h4>🖼️ Logo Upload</h4>
-      <p>Upload a logo that will appear on the right side of all pallet labels (optional)</p>
-      <input type="file" id="logoUpload" accept="image/*" class="file-input" onchange="handleLogoUpload()" />
-      <small style="color: white; font-size: 12px; margin-top: 10px; display: block; text-align: center;">Supported formats: PNG, JPG, GIF • Max size recommended: 200x100px</small>
+      <h4>🖼️ Logo Upload & Warehouse Filter</h4>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;">
+        <div>
+          <p style="margin-bottom: 2px; font-size: 15px; font-weight: 600;">Upload company logo here (optional):</p>
+          <input type="file" id="logoUpload" accept="image/*" class="file-input" onchange="handleLogoUpload()" />
+        </div>
+        <div>
+          <p style="margin-bottom: 8px; font-size: 15px; font-weight: 600;">Select which warehouse locations to generate labels for:</p>
+          <div style="display: flex; gap: 15px; justify-content: center;">
+            <button id="filterEncore" class="filter-btn" onclick="toggleFilter('Encore')">Encore</button>
+            <button id="filterUNIS" class="filter-btn" onclick="toggleFilter('UNIS')">UNIS</button>
+          </div>
+        </div>
+      </div>
     </div>
     
     <div class="manual-section">
@@ -463,7 +496,7 @@
     
     <div class="form-group">
       <label for="shipFrom">🏭 Ship From Address</label>
-      <textarea id="shipFrom" placeholder="Enter complete ship from address"></textarea>
+      <textarea id="shipFrom" placeholder="Enter ship from address"></textarea>
     </div>
     
     <div class="form-group">
@@ -488,9 +521,22 @@
   </div>
 
   <script>
-    // Store the last processed data globally so we can refresh labels
     let lastProcessedData = null;
     let lastManualData = null;
+    let warehouseFilters = {
+      Encore: false,
+      UNIS: false
+    };
+    
+    function toggleFilter(warehouse) {
+      warehouseFilters[warehouse] = !warehouseFilters[warehouse];
+      const btn = document.getElementById('filter' + warehouse);
+      if (warehouseFilters[warehouse]) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    }
     
     async function processExcelFile() {
       const fileInput = document.getElementById('excelFile');
@@ -504,11 +550,9 @@
       try {
         showStatus('Processing Excel file...', 'success');
         
-        // Read the Excel file
         const file = fileInput.files[0];
         const arrayBuffer = await file.arrayBuffer();
         
-        // Import XLSX library (dynamically load if not available)
         if (typeof XLSX === 'undefined') {
           const script = document.createElement('script');
           script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
@@ -526,17 +570,10 @@
           return;
         }
         
-        showStatus(`Found ${jsonData.length} shipments. Generating labels...`, 'success');
+        showStatus(`Found ${jsonData.length} shipments. Click "Generate Labels" to create labels.`, 'success');
         
-        // Store the data for potential refresh
         lastProcessedData = jsonData;
-        lastManualData = null; // Clear manual data since we're doing batch
-        
-        generateLabelsFromData(jsonData);
-        
-        setTimeout(() => {
-          showStatus(`Successfully generated labels for ${jsonData.length} shipments!`, 'success');
-        }, 500);
+        lastManualData = null;
         
       } catch (error) {
         console.error('Error processing Excel file:', error);
@@ -555,44 +592,69 @@
       const container = document.getElementById('labelContainer');
       container.innerHTML = '';
       
+      const filterEncore = warehouseFilters.Encore;
+      const filterUNIS = warehouseFilters.UNIS;
+      
       shipments.forEach(shipment => {
-        // Extract data from Excel columns
+        const asnNumber = shipment['ASN #'];
+        const mode = shipment['Mode'];
+        const scac = shipment['Carrier SCAC'];
+        const shipFrom = shipment['Ship from'] || '';
+        
+        if (asnNumber && asnNumber.toString().trim() !== '') {
+          return;
+        }
+        
+        if (mode && mode.toString().trim().toUpperCase() === 'SP') {
+          return;
+        }
+        
+        if (mode && mode.toString().trim().toUpperCase() === 'SMALL PARCEL') {
+          return;
+        }
+        
+        if (scac && scac.toString().trim().toUpperCase() === 'AMZX') {
+          return;
+        }
+        
+        if (scac && scac.toString().trim().toUpperCase() === 'UPSN') {
+          return;
+        }
+        
+        const shipFromLower = shipFrom.toLowerCase();
+        if (!filterEncore && shipFromLower.includes('encore')) {
+          return;
+        }
+        if (!filterUNIS && (shipFromLower.includes('unis') || shipFromLower.includes('uni fulfillment'))) {
+          return;
+        }
+        
         const arn = shipment['Shipment ID (ARN)'] || '';
-        const pos = shipment['POs'] || '';
-        const scac = shipment['Carrier SCAC'] || '';
-        const shipFrom = parseAddress(shipment['Ship from'] || '');
+        const pos = shipment['Purchase Orders'] || shipment['Purchase orders'] || shipment['purchase orders'] || '';
+        const shipFromFormatted = parseAddress(shipFrom);
         const shipTo = parseShipToCode(shipment['Ship to'] || '');
         const unstackedPallets = parseInt(shipment['Unstacked pallets'] || 0);
         const stackedPallets = parseInt(shipment['Stacked pallets'] || 0);
         
-        // Only use unstacked pallets column for total count
-        // If unstacked is 0 but stacked has a number, use the stacked number as unstacked (data entry error)
-        // If unstacked is 0 and stacked is also 0, treat as 1 pallet minimum
         let totalPallets;
         if (unstackedPallets === 0 && stackedPallets > 0) {
-          // Likely data entry error - use stacked value as unstacked
           totalPallets = stackedPallets;
         } else if (unstackedPallets === 0) {
-          // No pallets specified, default to 1
           totalPallets = 1;
         } else {
-          // Use unstacked pallets count (ignore stacked column)
           totalPallets = unstackedPallets;
         }
         
-        // Skip if no pallets
         if (totalPallets === 0) return;
         
-        // Generate pages for this shipment
         for (let palletNum = 1; palletNum <= totalPallets; palletNum++) {
           const pageDiv = document.createElement('div');
           pageDiv.className = 'page';
           
-          // Generate 4 identical labels for this pallet
           for (let i = 0; i < 4; i++) {
             const labelDiv = document.createElement('div');
             labelDiv.className = 'label';
-            labelDiv.innerHTML = createLabelHTML(palletNum, totalPallets, arn, pos, scac, shipFrom, shipTo);
+            labelDiv.innerHTML = createLabelHTML(palletNum, totalPallets, arn, pos, scac, shipFromFormatted, shipTo);
             pageDiv.appendChild(labelDiv);
           }
           
@@ -602,90 +664,82 @@
     }
     
     function parseAddress(addressString) {
-      // Parse "Company,Address,City,State Zip" format
       if (!addressString) return '';
       
-      // Split by commas and clean up each part
       const parts = addressString.split(',').map(part => part.trim());
       
       if (parts.length >= 4) {
-        // Format as: Company, Address Dock#, City State Zip (keep dock with address)
         const company = parts[0];
         const address = parts[1];
-        const dock = parts[2]; // This might be dock info
-        const cityState = parts.slice(3).join(', '); // Join remaining parts for city, state zip
+        const dock = parts[2];
+        const cityState = parts.slice(3).join(', ');
         
-        // Check if the third part looks like dock info (contains "Dock" or is short)
         if (dock && (dock.toLowerCase().includes('dock') || dock.length < 10)) {
           return `${company},<br>${address}, ${dock},<br>${cityState}`;
         } else {
-          // Treat as regular address parts
           return `${company},<br>${address},<br>${dock}, ${cityState}`;
         }
       } else if (parts.length === 3) {
-        // Format as: Company, Address, City State
         return `${parts[0]},<br>${parts[1]},<br>${parts[2]}`;
       } else {
-        // Just join with line breaks for other cases
         return parts.join(',<br>');
       }
     }
     
     function parseShipToCode(shipToString) {
-      // Extract just the code (e.g., "YXU1" from "YXU1,YXU1,11884 Sunset Dr., ST THOMAS,N5P 0G9")
       if (!shipToString) return '';
-      const parts = shipToString.split(',');
-      return parts[0] || shipToString;
+      // Extract 4-letter FC code (e.g., AVP1, YXU1)
+      // Match pattern: 3 uppercase letters followed by 1 digit
+      const match = shipToString.match(/[A-Z]{3}\d/);
+      return match ? match[0] : shipToString.split(',')[0];
     }
     
     function generateLabels() {
-      const arn = document.getElementById('arn').value;
-      const po = document.getElementById('po').value;
-      const scac = document.getElementById('scac').value;
-      const shipFrom = document.getElementById('shipFrom').value;
-      const shipTo = document.getElementById('shipTo').value;
-      const totalPallets = parseInt(document.getElementById('totalPallets').value);
-      
-      // Store manual data for potential refresh
-      lastManualData = { arn, po, scac, shipFrom, shipTo, totalPallets };
-      lastProcessedData = null; // Clear batch data since we're doing manual
-      
-      const container = document.getElementById('labelContainer');
-      container.innerHTML = '';
-      
-      // Create one page per pallet, with 4 identical labels per page
-      for (let palletNum = 1; palletNum <= totalPallets; palletNum++) {
-        const pageDiv = document.createElement('div');
-        pageDiv.className = 'page';
+      if (lastProcessedData) {
+        generateLabelsFromData(lastProcessedData);
+        showStatus(`Successfully generated labels!`, 'success');
+      } else {
+        const arn = document.getElementById('arn').value;
+        const po = document.getElementById('po').value;
+        const scac = document.getElementById('scac').value;
+        const shipFrom = document.getElementById('shipFrom').value;
+        const shipTo = document.getElementById('shipTo').value;
+        const totalPallets = parseInt(document.getElementById('totalPallets').value);
         
-        // Generate 4 identical labels for this pallet
-        for (let i = 0; i < 4; i++) {
-          const labelDiv = document.createElement('div');
-          labelDiv.className = 'label';
-          labelDiv.innerHTML = createLabelHTML(palletNum, totalPallets, arn, po, scac, shipFrom, shipTo);
-          pageDiv.appendChild(labelDiv);
+        lastManualData = { arn, po, scac, shipFrom, shipTo, totalPallets };
+        lastProcessedData = null;
+        
+        const container = document.getElementById('labelContainer');
+        container.innerHTML = '';
+        
+        for (let palletNum = 1; palletNum <= totalPallets; palletNum++) {
+          const pageDiv = document.createElement('div');
+          pageDiv.className = 'page';
+          
+          for (let i = 0; i < 4; i++) {
+            const labelDiv = document.createElement('div');
+            labelDiv.className = 'label';
+            labelDiv.innerHTML = createLabelHTML(palletNum, totalPallets, arn, po, scac, shipFrom, shipTo);
+            pageDiv.appendChild(labelDiv);
+          }
+          
+          container.appendChild(pageDiv);
         }
-        
-        container.appendChild(pageDiv);
       }
     }
     
     function handleLogoUpload() {
-      // Auto-refresh labels if we have existing data
       if (lastProcessedData || lastManualData) {
         setTimeout(() => {
           refreshLabels();
-        }, 100); // Small delay to ensure file is processed
+        }, 100);
       }
     }
     
     function refreshLabels() {
-      // Check if we have data to refresh
       if (lastProcessedData) {
-        // Refresh batch processed labels
         generateLabelsFromData(lastProcessedData);
       } else if (lastManualData) {
-        // Refresh manual labels
         const { arn, po, scac, shipFrom, shipTo, totalPallets } = lastManualData;
         const container = document.getElementById('labelContainer');
         container.innerHTML = '';
@@ -737,9 +791,6 @@
     function clearLabels() {
       document.getElementById('labelContainer').innerHTML = '';
     }
-    
-    // Don't generate initial labels on page load - let user input data first
-    // generateLabels();
   </script>
 </body>
 </html>

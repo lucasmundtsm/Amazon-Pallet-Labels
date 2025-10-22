@@ -447,7 +447,7 @@
     </div>
     <div class="upload-section">
       <h4>📊 Upload: Amazon shipment download file</h4>
-      <input type="file" id="excelFile" accept=".xlsx,.xls" class="file-input" onchange="processExcelFile()" />
+      <input type="file" id="excelFile" accept=".xlsx,.xls,.csv" class="file-input" onchange="processExcelFile()" />
       <div id="processingStatus" class="processing-status"></div>
     </div>
     
@@ -630,7 +630,7 @@
         }
         
         const arn = shipment['Shipment ID (ARN)'] || '';
-        const pos = shipment['Purchase Orders'] || shipment['Purchase orders'] || shipment['purchase orders'] || '';
+        const pos = shipment['POs'] || shipment['PO'] || shipment['Purchase Orders'] || shipment['Purchase orders'] || shipment['purchase orders'] || '';
         const shipFromFormatted = parseAddress(shipFrom);
         const shipTo = parseShipToCode(shipment['Ship to'] || '');
         const unstackedPallets = parseInt(shipment['Unstacked pallets'] || 0);

@@ -81,10 +81,26 @@
       margin-bottom: 8px;
     }
     
-    .upload-section p {
-      opacity: 0.9;
-      margin-bottom: 12px;
-      font-size: 13px;
+    .upload-section-target {
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 20px;
+      text-align: center;
+      box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);
+    }
+    
+    .upload-section-target h4 {
+      margin-top: 0;
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 8px;
     }
     
     .manual-section {
@@ -164,6 +180,27 @@
     .file-input::file-selector-button {
       background: white;
       color: #27ae60;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      margin-right: 12px;
+      cursor: pointer;
+    }
+    
+    .file-input-target {
+      margin: 15px 0;
+      padding: 12px;
+      background: rgba(255,255,255,0.2);
+      border: 2px dashed rgba(255,255,255,0.5);
+      border-radius: 8px;
+      color: white;
+      font-size: 14px;
+    }
+    
+    .file-input-target::file-selector-button {
+      background: white;
+      color: #e74c3c;
       border: none;
       padding: 8px 16px;
       border-radius: 6px;
@@ -294,6 +331,36 @@
       box-shadow: 0 8px 32px rgba(0,0,0,0.1);
     }
     
+    .page-target {
+      width: 297mm;
+      height: 210mm;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      page-break-after: always;
+      padding: 8mm;
+      box-sizing: border-box;
+      margin: 20px auto;
+      border: 2px solid #bdc3c7;
+      background: white;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    }
+    
+    .label-target {
+      border: 2px solid #000000;
+      padding: 20px;
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      font-size: 18pt;
+      background: white;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      color: #000000;
+      width: 100%;
+      height: 100%;
+    }
+    
     .label {
       border: 2px solid #000000;
       padding: 8px;
@@ -309,10 +376,20 @@
     
     .logo-upload {
       position: absolute;
-      top: 60px;
+      top: 40px;
       right: 8px;
       max-width: 160px;
       max-height: 80px;
+      z-index: 10;
+      object-fit: contain;
+    }
+    
+    .logo-upload-target {
+      position: absolute;
+      top: 60px;
+      right: 20px;
+      max-width: 400px;
+      max-height: 250px;
       z-index: 10;
       object-fit: contain;
     }
@@ -401,6 +478,19 @@
         gap: 3mm;
       }
       
+      .page-target {
+        width: 297mm;
+        height: 210mm;
+        margin: 0;
+        padding: 5mm;
+        border: none;
+        box-shadow: none;
+        page-break-after: always;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      
       .label::before {
         display: none;
       }
@@ -445,10 +535,18 @@
       <span style="font-size: 20px;">📋</span>
       <p style="margin: 0; font-size: 14px; color: #2c3e50; font-weight: 600;"><strong>Directions:</strong> Upload your Amazon shipment download file, select warehouse locations, then click "Generate Labels" to create printable pallet labels</p>
     </div>
+    
     <div class="upload-section">
       <h4>📊 Upload: Amazon shipment download file</h4>
       <input type="file" id="excelFile" accept=".xlsx,.xls,.csv" class="file-input" onchange="processExcelFile()" />
       <div id="processingStatus" class="processing-status"></div>
+    </div>
+    
+    <div class="upload-section-target">
+      <h4>🎯 Upload: Target shipment file</h4>
+      <input type="file" id="targetFile" accept=".xlsx,.xls,.csv" class="file-input-target" onchange="processTargetFile()" />
+      <div id="targetProcessingStatus" class="processing-status"></div>
+      <button onclick="downloadTargetTemplate()" style="margin-top: 10px; padding: 8px 16px; background: white; color: #e74c3c; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px;">📥 Download Target Template</button>
     </div>
     
     <div class="logo-section">
@@ -527,6 +625,42 @@
       Encore: false,
       UNIS: false
     };
+    let isTargetData = false;
+    
+    // Target FC addresses lookup
+    const targetFCAddresses = {
+      '0578': 'TARGET DC 0578,<br>13790 COUNTY RD 433,<br>TYLER, TX 75706',
+      '0587': 'TARGET DC 0587,<br>12905 E L AVE,<br>GALESBURG, MI 49053',
+      '3868': 'TARGET DC 3868,<br>1050 SITE PKWY,<br>HAMPTON, GA 30228',
+      '0560': 'TARGET DC 0560,<br>423 MOUNT VERNON RD,<br>STUARTS DRAFT, VA 24477',
+      '0579': 'TARGET DC 0579,<br>131 NORTH RD,<br>WILTON, NY 12831',
+      '0555': 'TARGET DC 0555,<br>2050 E BEAMER ST,<br>WOODLAND, CA 95776',
+      '3804': 'TARGET DC 3804,<br>3 WALKER WAY,<br>WEST JEFFERSON, OH 43162',
+      '0589': 'TARGET DC 0589,<br>3325 ARCHER DR,<br>CHAMBERSBURG, PA 17202',
+      '3806': 'TARGET DC 3806,<br>2702 SUMMIT AVE,<br>RIALTO, CA 92377',
+      '3865': 'TARGET DC 3865,<br>3305 S LAWNDALE AVE,<br>CHICAGO, IL 60623',
+      '0559': 'TARGET DC 0559,<br>1350 S GIRLS SCHOOL RD,<br>INDIANAPOLIS, IN 46231',
+      '0558': 'TARGET DC 0558,<br>875 BETA DR SW,<br>ALBANY, OR 97321',
+      '0553': 'TARGET DC 0553,<br>7895 REDWOOD AVE,<br>FONTANA, CA 92336',
+      '0590': 'TARGET DC 0590,<br>6601 HUDSON RD,<br>CEDAR FALLS, IA 50613',
+      '3801': 'TARGET DC 3801,<br>4055 RAILPORT PKWY,<br>MIDLOTHIAN, TX 76065',
+      '0551': 'TARGET DC 0551,<br>7120 HWY 65 NE,<br>FRIDLEY, MN 55432',
+      '3803': 'TARGET DC 3803,<br>5400 WENGER ST,<br>TOPEKA, KS 66609',
+      '0556': 'TARGET DC 0556,<br>110 W JORDAN RD,<br>TIFTON, GA 31793',
+      '0557': 'TARGET DC 0557,<br>1100 E VALLEY RD,<br>OCONOMOWOC, WI 53066',
+      '0593': 'TARGET DC 0593,<br>3700 ZACHARY AVE,<br>SHAFTER, CA 93263',
+      '0588': 'TARGET DC 0588,<br>7101 W VAN BUREN,<br>PHOENIX, AZ 85043',
+      '0594': 'TARGET DC 0594,<br>166 CORPORATE DR,<br>LUGOFF, SC 29078',
+      '3802': 'TARGET DC 3802,<br>1730 STATE HWY 5S,<br>AMSTERDAM, NY 12010',
+      '3808': 'TARGET DC 3808,<br>895 SUNBURY RD,<br>MIDWAY, GA 31320',
+      '3856': 'TARGET DC 3856,<br>23000 VAN BUREN BLVD,<br>RIVERSIDE, CA 92518',
+      '0554': 'TARGET DC 0554,<br>34800 UNITED AVE,<br>PUEBLO, CO 81001',
+      '0580': 'TARGET DC 0580,<br>6305 GREENBRIER PKWY NW,<br>MADISON, AL 35756',
+      '3811': 'TARGET DC 3811,<br>1900 STOVER CT,<br>NEWTON, NC 28658',
+      '3857': 'TARGET DC 3857,<br>400 CROSSROADS BLVD,<br>LOGAN TOWNSHIP, NJ 08085'
+    };
+    
+    const targetShipFrom = 'SIMPLE MANUFACTURING,<br>4600 SE 59TH STREET,<br>OKLAHOMA CITY, OK 73135';
     
     function toggleFilter(warehouse) {
       warehouseFilters[warehouse] = !warehouseFilters[warehouse];
@@ -536,6 +670,56 @@
       } else {
         btn.classList.remove('active');
       }
+    }
+    
+    async function processTargetFile() {
+      const fileInput = document.getElementById('targetFile');
+      const statusDiv = document.getElementById('targetProcessingStatus');
+      
+      if (!fileInput.files[0]) {
+        showTargetStatus('Please select a Target file first.', 'error');
+        return;
+      }
+      
+      try {
+        showTargetStatus('Processing Target file...', 'success');
+        
+        const file = fileInput.files[0];
+        const arrayBuffer = await file.arrayBuffer();
+        
+        if (typeof XLSX === 'undefined') {
+          const script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+          document.head.appendChild(script);
+          await new Promise(resolve => script.onload = resolve);
+        }
+        
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+        
+        if (jsonData.length === 0) {
+          showTargetStatus('No data found in Target file.', 'error');
+          return;
+        }
+        
+        showTargetStatus(`Found ${jsonData.length} Target shipments. Click "Generate Labels" to create labels.`, 'success');
+        
+        lastProcessedData = jsonData;
+        lastManualData = null;
+        
+      } catch (error) {
+        console.error('Error processing Target file:', error);
+        showTargetStatus('Error processing Target file. Please check the file format.', 'error');
+      }
+    }
+    
+    function showTargetStatus(message, type) {
+      const statusDiv = document.getElementById('targetProcessingStatus');
+      statusDiv.textContent = message;
+      statusDiv.className = `processing-status status-${type}`;
+      statusDiv.style.display = 'block';
     }
     
     async function processExcelFile() {
@@ -586,6 +770,58 @@
       statusDiv.textContent = message;
       statusDiv.className = `processing-status status-${type}`;
       statusDiv.style.display = 'block';
+    }
+    
+    function generateTargetLabels(shipments) {
+      const container = document.getElementById('labelContainer');
+      container.innerHTML = '';
+      
+      shipments.forEach(shipment => {
+        // Debug: log the shipment object to see what keys are available
+        console.log('Target shipment data:', shipment);
+        console.log('Available keys:', Object.keys(shipment));
+        
+        const po = shipment['PO'] || '';
+        let fc = (shipment['FC'] || '').toString().trim();
+        const pallets = parseInt(shipment['Pallets'] || 1);
+        
+        // Try multiple variations of Load ID
+        let loadID = '';
+        const possibleKeys = Object.keys(shipment);
+        for (let key of possibleKeys) {
+          if (key.toLowerCase().replace(/\s/g, '') === 'loadid') {
+            loadID = shipment[key] || '';
+            break;
+          }
+        }
+        
+        console.log('Load ID found:', loadID);
+        
+        // Normalize FC code: if 3 digits, add leading 0; if 4 digits, use as-is
+        if (fc.length === 3) {
+          fc = '0' + fc;
+        }
+        
+        // Get ship to address from FC lookup
+        const shipTo = targetFCAddresses[fc] || `TARGET DC ${fc}`;
+        
+        // Generate pages for this shipment - each pallet gets 2 pages (duplicate)
+        for (let palletNum = 1; palletNum <= pallets; palletNum++) {
+          // Create 2 pages for each pallet (duplicate)
+          for (let copy = 0; copy < 2; copy++) {
+            const pageDiv = document.createElement('div');
+            pageDiv.className = 'page-target';
+            
+            // Generate 1 large label for this page
+            const labelDiv = document.createElement('div');
+            labelDiv.className = 'label-target';
+            labelDiv.innerHTML = createTargetLabelHTML(palletNum, pallets, loadID, po, targetShipFrom, shipTo);
+            pageDiv.appendChild(labelDiv);
+            
+            container.appendChild(pageDiv);
+          }
+        }
+      });
     }
     
     function generateLabelsFromData(shipments) {
@@ -669,10 +905,15 @@
       const parts = addressString.split(',').map(part => part.trim());
       
       if (parts.length >= 4) {
-        const company = parts[0];
+        let company = parts[0];
         const address = parts[1];
         const dock = parts[2];
         const cityState = parts.slice(3).join(', ');
+        
+        // Replace "Encore" with "Encore Fulfillment"
+        if (company.toLowerCase() === 'encore') {
+          company = 'Encore Fulfillment';
+        }
         
         if (dock && (dock.toLowerCase().includes('dock') || dock.length < 10)) {
           return `${company},<br>${address}, ${dock},<br>${cityState}`;
@@ -680,9 +921,21 @@
           return `${company},<br>${address},<br>${dock}, ${cityState}`;
         }
       } else if (parts.length === 3) {
-        return `${parts[0]},<br>${parts[1]},<br>${parts[2]}`;
+        let company = parts[0];
+        
+        // Replace "Encore" with "Encore Fulfillment"
+        if (company.toLowerCase() === 'encore') {
+          company = 'Encore Fulfillment';
+        }
+        
+        return `${company},<br>${parts[1]},<br>${parts[2]}`;
       } else {
-        return parts.join(',<br>');
+        let result = parts.join(',<br>');
+        
+        // Replace "Encore" with "Encore Fulfillment" in any part
+        result = result.replace(/\bEncore\b/gi, 'Encore Fulfillment');
+        
+        return result;
       }
     }
     
@@ -696,9 +949,21 @@
     
     function generateLabels() {
       if (lastProcessedData) {
-        generateLabelsFromData(lastProcessedData);
-        showStatus(`Successfully generated labels!`, 'success');
+        // Check if this is Target data (has PO, FC, Pallets columns) or Amazon data
+        const firstRow = lastProcessedData[0];
+        if (firstRow && firstRow.hasOwnProperty('FC') && firstRow.hasOwnProperty('Pallets')) {
+          // This is Target data
+          isTargetData = true;
+          generateTargetLabels(lastProcessedData);
+          showTargetStatus(`Successfully generated Target labels!`, 'success');
+        } else {
+          // This is Amazon data
+          isTargetData = false;
+          generateLabelsFromData(lastProcessedData);
+          showStatus(`Successfully generated labels!`, 'success');
+        }
       } else {
+        isTargetData = false;
         const arn = document.getElementById('arn').value;
         const po = document.getElementById('po').value;
         const scac = document.getElementById('scac').value;
@@ -738,8 +1003,16 @@
     
     function refreshLabels() {
       if (lastProcessedData) {
-        generateLabelsFromData(lastProcessedData);
+        const firstRow = lastProcessedData[0];
+        if (firstRow && firstRow.hasOwnProperty('FC') && firstRow.hasOwnProperty('Pallets')) {
+          isTargetData = true;
+          generateTargetLabels(lastProcessedData);
+        } else {
+          isTargetData = false;
+          generateLabelsFromData(lastProcessedData);
+        }
       } else if (lastManualData) {
+        isTargetData = false;
         const { arn, po, scac, shipFrom, shipTo, totalPallets } = lastManualData;
         const container = document.getElementById('labelContainer');
         container.innerHTML = '';
@@ -771,12 +1044,15 @@
         logoHTML = `<img src="${logoURL}" class="logo-upload" alt="Logo" />`;
       }
       
+      // Determine label field based on whether this is Target or Amazon data
+      const arnLabel = isTargetData ? 'LOAD ID' : 'ARN';
+      
       return `
         ${logoHTML}
         <h2>PALLET LABEL - ${palletNum} of ${totalPallets}</h2>
-        <div class="label-field"><strong>ARN:</strong> ${arn}</div>
+        <div class="label-field"><strong>${arnLabel}:</strong> ${arn}</div>
         <div class="label-field"><strong>PO:</strong> ${po}</div>
-        <div class="label-field"><strong>SCAC:</strong> ${scac}</div>
+        ${scac ? `<div class="label-field"><strong>SCAC:</strong> ${scac}</div>` : ''}
         <div class="section">
           <div class="label-field"><strong>SHIP FROM:</strong></div>
           <div class="ship-address">${shipFrom.replace(/\n/g, '<br>')}</div>
@@ -788,8 +1064,62 @@
       `;
     }
     
+    function createTargetLabelHTML(palletNum, totalPallets, loadID, po, shipFrom, shipTo) {
+      const logoInput = document.getElementById('logoUpload');
+      let logoHTML = '';
+      
+      if (logoInput && logoInput.files && logoInput.files[0]) {
+        const logoURL = URL.createObjectURL(logoInput.files[0]);
+        logoHTML = `<img src="${logoURL}" class="logo-upload-target" alt="Logo" />`;
+      }
+      
+      return `
+        ${logoHTML}
+        <h2 style="font-size: 26pt; font-weight: bold;">PALLET LABEL - ${palletNum} of ${totalPallets}</h2>
+        <div class="label-field" style="font-size: 22pt; margin-bottom: 4mm; margin-top: 3mm;"><strong>LOAD ID:</strong> ${loadID}</div>
+        <div class="label-field" style="font-size: 22pt; margin-bottom: 4mm;"><strong>PO:</strong> ${po}</div>
+        <div class="section" style="margin-top: 6mm; padding-top: 4mm; border-top: 2px solid #bdc3c7;">
+          <div class="label-field" style="font-size: 22pt; margin-bottom: 3mm;"><strong>SHIP FROM:</strong></div>
+          <div class="ship-address" style="font-size: 20pt; line-height: 1.4;">${shipFrom.replace(/\n/g, '<br>')}</div>
+        </div>
+        <div class="section" style="margin-top: 6mm; padding-top: 4mm; border-top: 2px solid #bdc3c7;">
+          <div class="label-field" style="font-size: 22pt; margin-bottom: 3mm;"><strong>SHIP TO:</strong></div>
+          <div class="ship-address" style="font-size: 20pt; line-height: 1.4;">${shipTo}</div>
+        </div>
+      `;
+    }
+    
     function clearLabels() {
       document.getElementById('labelContainer').innerHTML = '';
+    }
+    
+    async function downloadTargetTemplate() {
+      try {
+        // Ensure XLSX library is loaded
+        if (typeof XLSX === 'undefined') {
+          const script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+          document.head.appendChild(script);
+          await new Promise(resolve => script.onload = resolve);
+        }
+        
+        // Create a workbook with the Target template structure
+        const wb = XLSX.utils.book_new();
+        
+        // Create worksheet with only headers
+        const headers = ['PO', 'FC', 'Pallets', 'Load ID'];
+        const wsData = [headers];
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        
+        // Add worksheet to workbook
+        XLSX.utils.book_append_sheet(wb, ws, 'Target Shipments');
+        
+        // Generate and download the file
+        XLSX.writeFile(wb, 'Target_Pallet_Label_Template.xlsx');
+      } catch (error) {
+        console.error('Error creating template:', error);
+        alert('Error creating template. Please try again.');
+      }
     }
   </script>
 </body>
